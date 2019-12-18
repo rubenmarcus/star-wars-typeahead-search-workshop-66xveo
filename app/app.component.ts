@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { tap,startWith } from 'rxjs/operators';
+import { tap,startWith, map, mergeMap } from 'rxjs/operators';
 
 // URL: `https://swapi.co/api/people/?search=${v}`
 
@@ -25,8 +25,11 @@ Objetivos:
 export class AppComponent {
   myInput = new FormControl;
   results$ = this.myInput.valueChanges.pipe(
+    map(v => `https://swapi.co/api/people/?search=${v}`),
+    mergeMap(url=> this.http.get(url)),
+    map(response => response['results']),
+    startWith( { message : 'Digite algo para começar a busca' }),
     tap(console.log),
-    startWith( { message : 'aaaa' })
   );
 
   constructor(private http: HttpClient) {}
