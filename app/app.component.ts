@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { tap,startWith, map, mergeMap } from 'rxjs/operators';
+import { tap,startWith, map, switchMap,filter,distinctUntilChanged,debounceTime,isEmpty,retry } from 'rxjs/operators';
 
 // URL: `https://swapi.co/api/people/?search=${v}`
 
@@ -25,9 +25,14 @@ Objetivos:
 export class AppComponent {
   myInput = new FormControl;
   results$ = this.myInput.valueChanges.pipe(
+    debounceTime(500),
+    filter((query: string) =>  query.length > 1),
     map(v => `https://swapi.co/api/people/?search=${v}`),
-    mergeMap(url=> this.http.get(url)),
+    switchMap(url=> this.http.get(url).pipe(
+    retry(5),
     map(response => response['results']),
+    startWith( { message : 'Carregando' }),
+)),
     startWith( { message : 'Digite algo para começar a busca' }),
     tap(console.log),
   );
